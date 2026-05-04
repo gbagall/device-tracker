@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Device Tracker</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input, select, button { margin: 5px; padding: 8px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px;}
+        th, td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+
+<h2>📱 Device Tracker</h2>
+
+<input id="device" placeholder="Device Name (e.g. Samsung A)">
+<input id="location" placeholder="Location">
+<select id="appType">
+    <option>Primary</option>
+    <option>Dual</option>
+</select>
+<select id="status">
+    <option>Login</option>
+    <option>Logout</option>
+</select>
+
+<button onclick="addEntry()">Add Entry</button>
+
+<table>
+    <thead>
+        <tr>
+            <th>Device</th>
+            <th>App</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Date & Time</th>
+        </tr>
+    </thead>
+    <tbody id="data"></tbody>
+</table>
+
+<script>
+let data = JSON.parse(localStorage.getItem("deviceData")) || [];
+
+function render() {
+    let table = document.getElementById("data");
+    table.innerHTML = "";
+    data.forEach(d => {
+        table.innerHTML += `
+        <tr>
+            <td>${d.device}</td>
+            <td>${d.app}</td>
+            <td>${d.status}</td>
+            <td>${d.location}</td>
+            <td>${d.time}</td>
+        </tr>`;
+    });
+}
+
+function addEntry() {
+    let entry = {
+        device: document.getElementById("device").value,
+        location: document.getElementById("location").value,
+        app: document.getElementById("appType").value,
+        status: document.getElementById("status").value,
+        time: new Date().toLocaleString()
+    };
+
+    data.push(entry);
+    localStorage.setItem("deviceData", JSON.stringify(data));
+    render();
+}
+
+render();
+</script>
+
+</body>
+</html>
