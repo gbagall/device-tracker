@@ -3,28 +3,97 @@
 <head>
     <title>Device Tracker</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        input, select, button { margin: 5px; padding: 8px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px;}
-        th, td { border: 1px solid #ddd; padding: 8px; }
+        body {
+            font-family: Arial;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .form {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .delete-btn {
+            background: red;
+            padding: 6px 10px;
+            border-radius: 5px;
+        }
+
+        .delete-btn:hover {
+            background: darkred;
+        }
     </style>
 </head>
+
 <body>
 
 <h2>📱 Device Tracker</h2>
 
-<input id="device" placeholder="Device Name (e.g. Samsung A)">
-<input id="location" placeholder="Location">
-<select id="appType">
-    <option>Primary</option>
-    <option>Dual</option>
-</select>
-<select id="status">
-    <option>Login</option>
-    <option>Logout</option>
-</select>
+<div class="form">
+    <input id="device" placeholder="Device Name">
+    <input id="location" placeholder="Location">
+    
+    <select id="appType">
+        <option>Primary</option>
+        <option>Dual</option>
+    </select>
 
-<button onclick="addEntry()">Add Entry</button>
+    <select id="status">
+        <option>Login</option>
+        <option>Logout</option>
+    </select>
+
+    <button onclick="addEntry()">Add Entry</button>
+</div>
 
 <table>
     <thead>
@@ -34,6 +103,7 @@
             <th>Status</th>
             <th>Location</th>
             <th>Date & Time</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody id="data"></tbody>
@@ -42,10 +112,23 @@
 <script>
 let data = JSON.parse(localStorage.getItem("deviceData")) || [];
 
+function formatTime(date) {
+    return date.toLocaleString('en-IN', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
 function render() {
     let table = document.getElementById("data");
     table.innerHTML = "";
-    data.forEach(d => {
+
+    data.forEach((d, index) => {
         table.innerHTML += `
         <tr>
             <td>${d.device}</td>
@@ -53,6 +136,7 @@ function render() {
             <td>${d.status}</td>
             <td>${d.location}</td>
             <td>${d.time}</td>
+            <td><button class="delete-btn" onclick="deleteEntry(${index})">Delete</button></td>
         </tr>`;
     });
 }
@@ -63,12 +147,22 @@ function addEntry() {
         location: document.getElementById("location").value,
         app: document.getElementById("appType").value,
         status: document.getElementById("status").value,
-        time: new Date().toLocaleString()
+        time: formatTime(new Date())
     };
 
-    data.push(entry);
+    // 👉 Add latest entry on TOP
+    data.unshift(entry);
+
     localStorage.setItem("deviceData", JSON.stringify(data));
     render();
+}
+
+function deleteEntry(index) {
+    if(confirm("Delete this entry?")) {
+        data.splice(index, 1);
+        localStorage.setItem("deviceData", JSON.stringify(data));
+        render();
+    }
 }
 
 render();
