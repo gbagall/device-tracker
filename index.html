@@ -1,77 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Device Tracker</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f5f7fa;
-            padding: 20px;
-        }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Tracker</title>
 
-        h2 {
-            text-align: center;
-        }
+<style>
+body {
+    font-family: Arial;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 10px;
+}
 
-        .form {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+h2 {
+    text-align: center;
+    font-size: 20px;
+}
 
-        input, select, button {
-            margin: 5px;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
+/* FORM */
+.form {
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
 
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+input, select, button {
+    width: 100%;
+    margin: 6px 0;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
 
-        button:hover {
-            background: #0056b3;
-        }
+button {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+}
 
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+/* CARD VIEW (MOBILE) */
+.card {
+    background: white;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
 
-        th {
-            background: #007bff;
-            color: white;
-        }
+.row {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+}
 
-        th, td {
-            padding: 12px;
-            text-align: center;
-        }
+.label {
+    font-weight: bold;
+}
 
-        tr:nth-child(even) {
-            background: #f2f2f2;
-        }
+.delete-btn {
+    background: red;
+    margin-top: 8px;
+}
 
-        .delete-btn {
-            background: red;
-            padding: 6px 10px;
-            border-radius: 5px;
-        }
+/* DESKTOP TABLE */
+.table-container {
+    display: none;
+}
 
-        .delete-btn:hover {
-            background: darkred;
-        }
-    </style>
+@media(min-width: 768px) {
+    .card { display: none; }
+    .table-container { display: block; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    th {
+        background: #007bff;
+        color: white;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: center;
+    }
+}
+</style>
 </head>
 
 <body>
@@ -81,7 +101,7 @@
 <div class="form">
     <input id="device" placeholder="Device Name">
     <input id="location" placeholder="Location">
-    
+
     <select id="appType">
         <option>Primary</option>
         <option>Dual</option>
@@ -92,67 +112,110 @@
         <option>Logout</option>
     </select>
 
+    <input type="date" id="date">
+
+    <select id="hour">
+        <option value="">Hour</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option>5</option><option>6</option><option>7</option><option>8</option>
+        <option>9</option><option>10</option><option>11</option><option>12</option>
+    </select>
+
+    <select id="minute">
+        <option value="">Minute</option>
+        <option>00</option><option>05</option><option>10</option>
+        <option>15</option><option>20</option><option>25</option>
+        <option>30</option><option>35</option><option>40</option>
+        <option>45</option><option>50</option><option>55</option>
+    </select>
+
+    <select id="ampm">
+        <option>AM</option>
+        <option>PM</option>
+    </select>
+
     <button onclick="addEntry()">Add Entry</button>
 </div>
 
+<!-- MOBILE CARDS -->
+<div id="cards"></div>
+
+<!-- DESKTOP TABLE -->
+<div class="table-container">
 <table>
-    <thead>
-        <tr>
-            <th>Device</th>
-            <th>App</th>
-            <th>Status</th>
-            <th>Location</th>
-            <th>Date & Time</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="data"></tbody>
+<thead>
+<tr>
+    <th>Device</th>
+    <th>App</th>
+    <th>Status</th>
+    <th>Location</th>
+    <th>Date</th>
+    <th>Time</th>
+    <th>Action</th>
+</tr>
+</thead>
+<tbody id="tableData"></tbody>
 </table>
+</div>
 
 <script>
 let data = JSON.parse(localStorage.getItem("deviceData")) || [];
 
-function formatTime(date) {
-    return date.toLocaleString('en-IN', {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
 function render() {
-    let table = document.getElementById("data");
+    let cards = document.getElementById("cards");
+    let table = document.getElementById("tableData");
+
+    cards.innerHTML = "";
     table.innerHTML = "";
 
     data.forEach((d, index) => {
+
+        // MOBILE CARD
+        cards.innerHTML += `
+        <div class="card">
+            <div class="row"><span class="label">Device:</span> ${d.device}</div>
+            <div class="row"><span class="label">App:</span> ${d.app}</div>
+            <div class="row"><span class="label">Status:</span> ${d.status}</div>
+            <div class="row"><span class="label">Location:</span> ${d.location}</div>
+            <div class="row"><span class="label">Date:</span> ${d.date}</div>
+            <div class="row"><span class="label">Time:</span> ${d.time}</div>
+            <button class="delete-btn" onclick="deleteEntry(${index})">Delete</button>
+        </div>`;
+
+        // DESKTOP TABLE
         table.innerHTML += `
         <tr>
             <td>${d.device}</td>
             <td>${d.app}</td>
             <td>${d.status}</td>
             <td>${d.location}</td>
+            <td>${d.date}</td>
             <td>${d.time}</td>
-            <td><button class="delete-btn" onclick="deleteEntry(${index})">Delete</button></td>
+            <td><button onclick="deleteEntry(${index})">Delete</button></td>
         </tr>`;
     });
 }
 
 function addEntry() {
+    let hour = document.getElementById("hour").value;
+    let minute = document.getElementById("minute").value;
+    let ampm = document.getElementById("ampm").value;
+
+    if(!hour || !minute) {
+        alert("Select time");
+        return;
+    }
+
     let entry = {
         device: document.getElementById("device").value,
         location: document.getElementById("location").value,
         app: document.getElementById("appType").value,
         status: document.getElementById("status").value,
-        time: formatTime(new Date())
+        date: document.getElementById("date").value,
+        time: `${hour}:${minute} ${ampm}`
     };
 
-    // 👉 Add latest entry on TOP
     data.unshift(entry);
-
     localStorage.setItem("deviceData", JSON.stringify(data));
     render();
 }
